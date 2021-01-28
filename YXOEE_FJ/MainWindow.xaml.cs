@@ -20,6 +20,9 @@ using Newtonsoft.Json;
 using OPCAutomation;
 using YXOEE_FJ.DAL;
 using YXOEE_FJ.Entity;
+using Panuon.UI.Silver;
+using System.ComponentModel;
+using Panuon.UI.Silver.Core;
 
 namespace YXOEE_FJ
 {
@@ -33,7 +36,6 @@ namespace YXOEE_FJ
         private OPCGroup OpcGroup;
         private OPCGroups OpcGroups;
         private OPCItems OpcItems;
-        private OPCItem OpcItem;
         private bool OPCState = false;
         private bool IsConnected = false;
         private MainDAL dal;
@@ -45,13 +47,16 @@ namespace YXOEE_FJ
         private Array lErrors;
         private int TransactionID = 0;
         private int CancelID = 0;
-        private static int count = 15;
+        private static int count = 4;
         private List<OPCVarList> varList = new List<OPCVarList>();
         private ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private bool firstSave = false;
         private bool stSave = false;
         private bool endSave = false;
         private DateTime trigger = DateTime.Now.Date;
+        private string strHostName = null;
+        private static BitmapImage IFalse = new BitmapImage(new Uri("/Static/01.png", UriKind.Relative));
+        private static BitmapImage ITrue = new BitmapImage(new Uri("/Static/02.png", UriKind.Relative));
 
         public MainWindow()
         {
@@ -61,35 +66,10 @@ namespace YXOEE_FJ
             {
                 LoadJsonData();
                 dal = new MainDAL(this.config);
+                DataList.ItemsSource = null;
+                OPCImage.Source = IFalse;
+                DataList.ItemsSource = varList;
 
-                if (Init())
-                {
-                    timer = new DispatcherTimer();
-                    timer.Tick += (s, e) =>
-                    {
-
-                        if (OpcServer != null)
-                        {
-                            try
-                            {
-                                OpcGroup.AsyncRead(count, lserverhandles, out lErrors, TransactionID, out CancelID);
-                            }
-                            catch (Exception ex)
-                            {
-                            }
-                        }
-
-                    };
-                    timer.Interval = new TimeSpan(0, 0, 0, 0, 200);
-                    timer.Start();
-                }
-                else
-                {
-                    if (MessageBox.Show("连接OPC服务错误！", "错误提示") == MessageBoxResult.OK)
-                    {
-                        this.Close();
-                    }
-                }
             }
             catch (Exception ex)
             {
@@ -109,36 +89,61 @@ namespace YXOEE_FJ
             bool b2 = CreateGroups();
             if (b2 == false)
                 return false;
+
+            OPCImage.Source = ITrue;
             OpcGroup.AsyncReadComplete += AsyncReadData;
 
             // add items
             string[] tmpIDs = new string[count + 1];
+            string[] tmpNames = new string[count + 1];
             #region Tag
             tmpIDs[1] = "D425._modifyCountES";
-            tmpIDs[2] = "D425._modifyCountES";
-            tmpIDs[3] = "D425._modifyCountES";
-            tmpIDs[4] = "D425._modifyCountES";
-            tmpIDs[5] = "D425._modifyCountES";
-            tmpIDs[6] = "D425._modifyCountES";
-            tmpIDs[7] = "D425._modifyCountES";
-            tmpIDs[8] = "D425._modifyCountES";
-            tmpIDs[9] = "D425._modifyCountES";
-            tmpIDs[10] = "D425._modifyCountES";
-            tmpIDs[11] = "D425._modifyCountES";
-            tmpIDs[12] = "D425._modifyCountES";
-            tmpIDs[13] = "D425._modifyCountES";
-            tmpIDs[14] = "D425._modifyCountES";
-            tmpIDs[15] = "D425._modifyCountES";
+            tmpIDs[2] = "D425._modifyCountRT";
+            tmpIDs[3] = "D425.q_D425_X142_10_spare";
+            tmpIDs[4] = "D425.q_D425_X142_10_spare";
+            //tmpIDs[5] = "";
+            //tmpIDs[6] = "";
+            //tmpIDs[7] = "";
+            //tmpIDs[8] = "";
+            //tmpIDs[9] = "";
+            //tmpIDs[10] = "";
+            //tmpIDs[11] = "";
+            //tmpIDs[12] = "";
+            //tmpIDs[13] = "";
+            //tmpIDs[14] = "";
+            //tmpIDs[15] = "";
+
+            tmpNames[1] = "";
+            tmpNames[2] = "";
+            tmpNames[3] = "";
+            tmpNames[4] = "";
+            //tmpNames[5] = "";
+            //tmpNames[6] = "";
+            //tmpNames[7] = "";
+            //tmpNames[8] = "";
+            //tmpNames[9] = "";
+            //tmpNames[10] = "";
+            //tmpNames[11] = "";
+            //tmpNames[12] = "";
+            //tmpNames[13] = "";
+            //tmpNames[14] = "";
+            //tmpNames[15] = "";
             #endregion
+
+            varList.Clear();
             int[] tmpCHandles = new int[count + 1];
-            for (int i = 1; i < count; i++)
+            for (int i = 1; i <= count; i++)
             {
                 tmpCHandles[i] = i;
                 varList.Add(new OPCVarList()
                 {
-                    OPCItemID = tmpIDs[i]
+                    OPCItemID = tmpIDs[i],
+                    OPCItemName = tmpNames[i]
                 });
             }
+
+            DataList.ItemsSource = varList;
+            DataList.Items.Refresh();
 
             strItemIDs = (Array)tmpIDs;
             lClientHandles = (Array)tmpCHandles;
@@ -212,7 +217,10 @@ namespace YXOEE_FJ
                     }
                 }
             }
+
+            OpcGroup = null;
             IsConnected = false;
+            OPCImage.Source = IFalse;
         }
 
         /// <summary>
@@ -243,41 +251,42 @@ namespace YXOEE_FJ
 
 
                 bool isConn = false;
-                OpcServer = new OPCServer();
-                string strHostIP;
+                //OpcServer = new OPCServer();
+                //string strHostIP;
                 //获取IP地址上最后一个 OPC Server 的名字
                 //获取本地计算机IP,计算机名称
-                IPHostEntry IPHost = Dns.GetHostEntry(Environment.MachineName);
-                IPHost.HostName.ToString();
-                if (IPHost.AddressList.Length > 0)
-                {
-                    strHostIP = IPHost.AddressList[0].ToString();
-                }
-                else
-                {
-                    return false;
-                }
-                //通过IP来获取计算机名称，可用在局域网内
-                IPHostEntry ipHostEntry = Dns.GetHostEntry(strHostIP);
-                var strHostName = ipHostEntry.HostName.ToString();
+                //IPHostEntry IPHost = Dns.GetHostEntry(Environment.MachineName);
+                //IPHost.HostName.ToString();
+                //if (IPHost.AddressList.Length > 0)
+                //{
+                //    strHostIP = IPHost.AddressList[0].ToString();
+                //}
+                //else
+                //{
+                //    return false;
+                //}
+                ////通过IP来获取计算机名称，可用在局域网内
+                //IPHostEntry ipHostEntry = Dns.GetHostEntry(strHostIP);
+                //var strHostName = ipHostEntry.HostName.ToString();
 
 
-                object serverList = OpcServer.GetOPCServers(strHostName);
-                if (serverList == null)
-                {
-                    OPCState = false;
-                    return false;
-                }
+                //object serverList = OpcServer.GetOPCServers(strHostName);
+                //if (serverList == null)
+                //{
+                //    OPCState = false;
+                //    return false;
+                //}
 
-                foreach (string turn in (Array)serverList)
-                {
-                    ServerName = turn;
-                log.Info(turn);
-                }
-                //ServerName = "";
-                log.Info(strHostName);
+                //foreach (string turn in (Array)serverList)
+                //{
+                //    ServerName = turn;
+                //log.Info(turn);
+                //}
+                ////ServerName = "";
+                //log.Info(strHostName);
 
-                OpcServer.Connect("OPC.SimaticNET.1", strHostIP); //连接OPC Server
+                ServerName = this.opcserverlist.Text;
+                OpcServer.Connect(ServerName, strHostName); //连接OPC Server
                 if (OpcServer.ServerState == (int)OPCServerState.OPCRunning)
                 {
                     isConn = true;
@@ -369,6 +378,10 @@ namespace YXOEE_FJ
                 }
             }
 
+            DataList.ItemsSource = varList;
+            DataList.Items.Refresh();
+            
+
             // 时间点存储数据
             if (!firstSave)
             {
@@ -410,25 +423,152 @@ namespace YXOEE_FJ
             }
 
         }
+
+        private void Refresh_Click(object sender, RoutedEventArgs e)
+        {
+            clientlist.Items.Clear();
+            opcserverlist.Items.Clear();
+
+            //获取客户端名称和IP
+            GetLocaIp();
+            //获取OPC服务器
+            GetLocalOPCServer();
+            //初始化客户端名和OPC服务器名的选择
+            this.clientlist.SelectedIndex = 0;
+            this.opcserverlist.SelectedIndex = 0;
+
+            
+        }
+
+        private void conn_Click(object sender, RoutedEventArgs e)
+        {
+            if (Init())
+            {
+
+                timer = new DispatcherTimer();
+                timer.Tick += (s, ee) =>
+                {
+
+                    if (OpcServer != null)
+                    {
+                        try
+                        {
+                            OpcGroup.AsyncRead(count, lserverhandles, out lErrors, TransactionID, out CancelID);
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+                    }
+
+                };
+                timer.Interval = new TimeSpan(0, 0, 0, 5);
+                timer.Start();
+
+                connBtn.Visibility = Visibility.Hidden;
+                disBtn.Visibility = Visibility.Visible;
+                refreshBtn.Visibility = Visibility.Hidden;
+            }
+            else
+            {
+                if (MessageBoxX.Show("连接OPC服务错误！", "错误提示") == MessageBoxResult.OK)
+                {
+                    this.Close();
+                }
+            }
+        }
+
+        private void disconn_Click(object sender, RoutedEventArgs e)
+        {
+            DisConnected();
+
+            connBtn.Visibility = Visibility.Visible;
+            disBtn.Visibility = Visibility.Hidden;
+            refreshBtn.Visibility = Visibility.Visible;
+        }
+
+        private void GetLocaIp()
+        {
+            //获取本地计算机名
+            strHostName = Dns.GetHostName();
+            this.clientlist.Items.Add(strHostName);
+
+            //获取本机IP地址
+            try
+            {
+                IPHostEntry ipHostEntry = Dns.GetHostEntry(strHostName);
+                for (int i = 0; i < ipHostEntry.AddressList.Length; i++)
+                {
+                    //从IP地址列表中筛选出IPv4类型的IP地址
+                    //AddressFamily.InterNetwork表示此IP为IPv4,
+                    //AddressFamily.InterNetworkV6表示此地址为IPv6类型
+                    if (ipHostEntry.AddressList[i].AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    {
+                        this.clientlist.Items.Add(ipHostEntry.AddressList[i].ToString());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("获取本地IP出错:" + ex.Message);
+            }
+
+            //添加空字符串作为客户端名实现与OPC服务器的连接
+            if (!this.clientlist.Items.Contains(""))
+            {
+                this.clientlist.Items.Add("");
+            }
+        }
+
+        private void GetLocalOPCServer()
+        {
+            try
+            {
+                OpcServer = new OPCServer();
+                object opcServerList = OpcServer.GetOPCServers(strHostName);
+                foreach (string server in (Array)opcServerList)
+                {
+                    this.opcserverlist.Items.Add(server);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("获取OPC服务器出错：" + ex.Message);
+            }
+        }
     }
 
     public class OPCVarList
     {
         /// <summary>
+        /// 变量ID
+        /// </summary>
+        [DisplayName("变量ID")]
+        [IgnoreColumn]
+        public string OPCItemID { get; set; }
+
+        /// <summary>
         /// 变量名称
         /// </summary>
-        public string OPCItemID { get; set; }
+        [DisplayName("变量名称")]
+        [ColumnWidth("350")]
+        public string OPCItemName { get; set; }
         /// <summary>
         /// 值
         /// </summary>
+        [DisplayName("变量值")]
+        [ColumnWidth("200")]
         public string OPCValue { get; set; }
         /// <summary>
         /// 通信质量
         /// </summary>
+        [DisplayName("通信质量")]
+        [ColumnWidth("60")]
         public string Quanlity { get; set; }
         /// <summary>
         /// 更新时间
         /// </summary>
+        [DisplayName("更新时间")]
+        [ColumnWidth("*")]
         public string UpdateTime { get; set; }
     }
 }
