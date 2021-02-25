@@ -8,6 +8,9 @@ using YXOEE_FJ.Entity;
 
 namespace YXOEE_FJ.DAL
 {
+    using Common;
+    using Dapper;
+
     public class MainDAL
     {
         private ConfigData config;
@@ -16,6 +19,17 @@ namespace YXOEE_FJ.DAL
         public MainDAL(ConfigData data)
         {
             this.config = data;
+        }
+
+        //
+        public OPCServerData GetOPCInfo()
+        {
+            string sql = @"select * from t_OpcServer where Status = 1";
+
+            using (var conn = new SQLHelper(config).GetConnection())
+            {
+                return conn.QuerySingleOrDefault<OPCServerData>(sql);
+            }
         }
 
         // 存储OEE 数据

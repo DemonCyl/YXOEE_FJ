@@ -12,7 +12,7 @@
         <Viewbox VerticalAlignment="Top" >
             <Canvas x:Name="Canvas1" Width="840" Height=" 470">
 
-                <Label Canvas.Top="17" Content="客户端:" FontSize="15" FontFamily="Microsoft Yahei" Foreground="Black" Canvas.Left="10" Width="90" HorizontalContentAlignment="Right"/>
+                <!--<Label Canvas.Top="17" Content="客户端:" FontSize="15" FontFamily="Microsoft Yahei" Foreground="Black" Canvas.Left="10" Width="90" HorizontalContentAlignment="Right"/>
                 <ComboBox  Height="30" Width="200" pu:ComboBoxHelper.HoverBackground="#1EFFA000" pu:ComboBoxHelper.SelectedBackground="#32FFA000" x:Name="clientlist" Visibility="Visible" FontFamily="Microsoft Yahei"
                     pu:ComboBoxHelper.CornerRadius="7" Canvas.Left="105" Canvas.Top="17"  />
                 <Button  Height="30" Width="45" Content="刷新" pu:ButtonHelper.ClickStyle="Sink" FontFamily="Microsoft Yahei" Background="White"  Foreground="Black" Name="refreshBtn"
@@ -24,13 +24,14 @@
                 <Button  Height="30" Width="45" Content="连接" pu:ButtonHelper.ClickStyle="Sink" FontFamily="Microsoft Yahei" Background="White"  Foreground="Black" Visibility="Visible" Name="connBtn"
                     pu:ButtonHelper.HoverBrush="#FF8900" pu:ButtonHelper.CornerRadius="7" Canvas.Left="320" Canvas.Top="52" Click="conn_Click" />
                 <Button  Height="30" Width="45" Content="断开" pu:ButtonHelper.ClickStyle="Sink" FontFamily="Microsoft Yahei" Background="White"  Foreground="Black" Visibility="Hidden" Name="disBtn"
-                    pu:ButtonHelper.HoverBrush="#FF8900" pu:ButtonHelper.CornerRadius="7" Canvas.Left="320" Canvas.Top="52" Click="disconn_Click" />
+                    pu:ButtonHelper.HoverBrush="#FF8900" pu:ButtonHelper.CornerRadius="7" Canvas.Left="320" Canvas.Top="52" Click="disconn_Click" />-->
+                <Button  Height="30" Width="80" Content="重新连接" pu:ButtonHelper.ClickStyle="Sink" FontFamily="Microsoft Yahei" Background="White"  Foreground="Black" Name="ReConn" FontSize="17"
+                    pu:ButtonHelper.HoverBrush="#FF8900" pu:ButtonHelper.CornerRadius="7" Canvas.Left="158" Canvas.Top="14" Click="ReConn_Click" />
+                <Label Canvas.Top="14" Content="服务器状态:" FontSize="17" FontFamily="Microsoft Yahei" Foreground="Black" Canvas.Left="11" Width="101" HorizontalContentAlignment="Right"/>
+                <Image x:Name="OPCImage" Width="15" Height="13" Canvas.Left="120" Canvas.Top="23" />
 
-                <Label Canvas.Top="53" Content="服务器状态:" FontSize="15" FontFamily="Microsoft Yahei" Foreground="Black" Canvas.Left="388" Width="90" HorizontalContentAlignment="Right"/>
-                <Image x:Name="OPCImage" Width="15" Height="13" Canvas.Left="489" Canvas.Top="62" />
-
-                <TextBlock x:Name="TM" HorizontalAlignment="Left" Grid.Row="3" Foreground="#F0E68C" FontFamily="Microsoft Yahei" FontSize="15"
-                           TextWrapping="Wrap" Text="" VerticalAlignment="Top" Height="58" Width="169" Canvas.Left="661" Canvas.Top="17"/>
+                <TextBox x:Name="TM" HorizontalAlignment="Center" Grid.Row="3" Foreground="Black" FontFamily="Microsoft Yahei" FontSize="17" Background="LightGray"
+                           TextWrapping="Wrap" Text="" VerticalAlignment="Center"  Height="32" Width="448" Canvas.Left="382" Canvas.Top="14"/>
 
                 <DataGrid  Width="820" Height="277" x:Name="DataList" GridLinesVisibility="None"  HeadersVisibility="Column"
                     pu:DataGridHelper.HeaderMinHeight="20" IsReadOnly="True" BorderThickness="2"  FontSize="15"

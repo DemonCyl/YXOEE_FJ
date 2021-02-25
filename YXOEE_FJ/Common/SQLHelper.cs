@@ -14,25 +14,21 @@ namespace YXOEE_FJ.Common
     public class SQLHelper
     {
 
-        public class DbHelperSQL
+        private string connStr = null;
+        private ConfigData configData;
+
+        public SQLHelper(ConfigData data)
         {
-            private string connStr = null;
-            private ConfigData configData;
+            this.configData = data;
 
-            public DbHelperSQL(ConfigData data)
-            {
-                this.configData = data;
-
-                this.connStr = new StringBuilder("server=" + configData.DataIpAddress +
-                ";database=" + configData.DataBaseName + "; uid=" + configData.Uid + ";pwd=" + configData.Pwd + "").ToString();
-            }
-
-            public SqlConnection GetConnection()
-            {
-                return new SqlConnection(connStr);
-            }
-
-
+            this.connStr = new StringBuilder("server=" + configData.DataIpAddress +
+            ";database=" + configData.DataBaseName + "; uid=" + configData.Uid + ";pwd=" + configData.Pwd + "").ToString();
         }
+
+        public SqlConnection GetConnection()
+        {
+            return new SqlConnection(connStr);
+        }
+
     }
 }
