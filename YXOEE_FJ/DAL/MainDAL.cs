@@ -32,8 +32,25 @@ namespace YXOEE_FJ.DAL
             }
         }
 
-        // 存储OEE 数据
+        public List<InterFaceDataFJ> GetFJ()
+        {
+            string sql = @"select * from t_InterfaceDataFJ ";
 
+            using (var conn = new SQLHelper(config).GetConnection())
+            {
+                return conn.Query<InterFaceDataFJ>(sql).ToList();
+            }
+        }
+        // 存储OEE 数据
+        public void UpdateData(InterFaceDataFJ model)
+        {
+            string sql = @"update t_InterfaceDataFJ set Fvalue = @Fvalue,FQuanlity = @FQuanlity,FNewBillTime = GETDATE() where FTagID = @FTagID";
+
+            using (var conn = new SQLHelper(config).GetConnection())
+            {
+                conn.Execute(sql, model);
+            }
+        }
 
     }
 }

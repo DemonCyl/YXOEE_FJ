@@ -41,6 +41,7 @@ namespace YXOEE_FJ
         private MainDAL dal;
         private ConfigData config;
         private DispatcherTimer ShowTimer;
+        private DispatcherTimer ReconnTimer;
         private DispatcherTimer timer;
         private Array strItemIDs;
         private Array lClientHandles;
@@ -48,8 +49,8 @@ namespace YXOEE_FJ
         private Array lErrors;
         private int TransactionID = 0;
         private int CancelID = 0;
-        private static int count = 4;
-        private List<OPCVarList> varList = new List<OPCVarList>();
+        private int count = 0;
+        private List<InterFaceDataFJ> varList = new List<InterFaceDataFJ>();
         private ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private bool firstSave = false;
         private bool stSave = false;
@@ -68,6 +69,14 @@ namespace YXOEE_FJ
                 LoadJsonData();
                 dal = new MainDAL(this.config);
                 serverData = dal.GetOPCInfo();
+                if (serverData == null)
+                    throw new Exception("无OPC服务器配置！");
+                varList = dal.GetFJ();
+                if (!varList.Any())
+                {
+                    throw new Exception("无TAG资料配置！");
+                }
+                count = varList.Count;
 
                 #region 时间定时器
                 ShowTimer = new System.Windows.Threading.DispatcherTimer();
@@ -81,6 +90,7 @@ namespace YXOEE_FJ
                 DataList.ItemsSource = varList;
 
                 OpcServer = new OPCServer();
+
                 if (Init())
                 {
                     ReadData();
@@ -92,10 +102,17 @@ namespace YXOEE_FJ
                         this.Close();
                     }
                 }
+
+                #region 时间定时器
+                ReconnTimer = new System.Windows.Threading.DispatcherTimer();
+                ReconnTimer.Tick += new EventHandler(Reconn);
+                ReconnTimer.Interval = new TimeSpan(0, 0, 0, 5);
+                ReconnTimer.Start();
+                #endregion
             }
             catch (Exception ex)
             {
-                log.Error(ex.Message);
+                log.Error("1." + ex.Message);
             }
         }
 
@@ -114,54 +131,17 @@ namespace YXOEE_FJ
 
             OPCImage.Source = ITrue;
             OpcGroup.AsyncReadComplete += AsyncReadData;
+            //OpcGroup.DataChange += AsyncReadData;
 
             // add items
             string[] tmpIDs = new string[count + 1];
             string[] tmpNames = new string[count + 1];
-            #region Tag
-            tmpIDs[1] = "D425._modifyCountES";
-            tmpIDs[2] = "D425._modifyCountRT";
-            tmpIDs[3] = "D425.q_D425_X142_10_spare";
-            tmpIDs[4] = "D425.q_D425_X142_10_spare";
-            //tmpIDs[5] = "";
-            //tmpIDs[6] = "";
-            //tmpIDs[7] = "";
-            //tmpIDs[8] = "";
-            //tmpIDs[9] = "";
-            //tmpIDs[10] = "";
-            //tmpIDs[11] = "";
-            //tmpIDs[12] = "";
-            //tmpIDs[13] = "";
-            //tmpIDs[14] = "";
-            //tmpIDs[15] = "";
-
-            tmpNames[1] = "111";
-            tmpNames[2] = "222";
-            tmpNames[3] = "333";
-            tmpNames[4] = "444";
-            //tmpNames[5] = "";
-            //tmpNames[6] = "";
-            //tmpNames[7] = "";
-            //tmpNames[8] = "";
-            //tmpNames[9] = "";
-            //tmpNames[10] = "";
-            //tmpNames[11] = "";
-            //tmpNames[12] = "";
-            //tmpNames[13] = "";
-            //tmpNames[14] = "";
-            //tmpNames[15] = "";
-            #endregion
-
-            varList.Clear();
             int[] tmpCHandles = new int[count + 1];
-            for (int i = 1; i <= count; i++)
+            for (int i = 1; i<=count; i++)
             {
                 tmpCHandles[i] = i;
-                varList.Add(new OPCVarList()
-                {
-                    OPCItemID = tmpIDs[i],
-                    OPCItemName = tmpNames[i]
-                });
+                tmpIDs[i] = varList[i-1].FTagID;
+                tmpNames[i] = varList[i-1].FDataName;
             }
 
             DataList.ItemsSource = varList;
@@ -192,7 +172,7 @@ namespace YXOEE_FJ
             }
             catch (Exception e)
             {
-                log.Error(e.Message);
+                log.Error("2." + e.Message);
             }
         }
 
@@ -220,6 +200,7 @@ namespace YXOEE_FJ
                     try
                     {
                         OpcGroup.AsyncReadComplete -= AsyncReadData;
+                        //OpcGroup.DataChange -= AsyncReadData;
                         //删组 
                         if (OpcGroup != null)
                             OpcServer.OPCGroups.Remove(OpcGroup.Name);
@@ -289,7 +270,7 @@ namespace YXOEE_FJ
             catch (Exception ex)
             {
                 OPCState = false;
-                log.Error(ex.Message);
+                log.Error("3." + ex.Message);
                 return false;
             }
         }
@@ -337,7 +318,7 @@ namespace YXOEE_FJ
             }
             catch (Exception ex)
             {
-                log.Error(ex.Message);
+                log.Error("4." + ex.Message);
                 isCreate = false;
             }
             return isCreate;
@@ -353,28 +334,36 @@ namespace YXOEE_FJ
         /// <param name="Qualities"></param>
         /// <param name="TimeStamps"></param>
         /// <param name="Errors"></param>
-        private void AsyncReadData(int TransactionID, int NumItems, ref Array ClientHandles, ref Array ItemValues, ref Array Qualities, ref Array TimeStamps, ref Array Errors)
+        private void AsyncReadData(int TransactionID, int NumItems, ref Array ClientHandles, ref Array ItemValues, ref Array Qualities, ref Array TimeStamps, ref Array Errors) //, ref Array Errors
         {
             // 数据解析
             for (int i = 0; i < NumItems; i++)
             {
-                object value = ItemValues.GetValue(i + 1);
-                int clientHandle = Convert.ToInt32(ClientHandles.GetValue(i + 1));
-
-                for (int j = 0; j < this.varList.Count; j++)
+                try
                 {
-                    if (j + 1 == clientHandle)
+                    object value = ItemValues.GetValue(i + 1);
+                    int clientHandle = Convert.ToInt32(ClientHandles.GetValue(i + 1));
+
+                    for (int j = 0; j < this.varList.Count; j++)
                     {
-                        this.varList[j].OPCValue = value.ToString();
-                        this.varList[j].Quanlity = Qualities.GetValue(i + 1).ToString();
-                        this.varList[j].UpdateTime = TimeStamps.GetValue(i + 1).ToString();
+                        if (j + 1 == clientHandle)
+                        {
+                            this.varList[j].Fvalue = value.ToString();
+                            this.varList[j].FQuanlity = Qualities.GetValue(i + 1).ToString();
+                            this.varList[j].UpdateTime = TimeStamps.GetValue(i + 1).ToString();
+
+                            dal.UpdateData(varList[j]);
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    log.Error("5." + ex.Message);
                 }
             }
 
             DataList.ItemsSource = varList;
             DataList.Items.Refresh();
-
 
             // 时间点存储数据
             if (!firstSave)
@@ -428,10 +417,15 @@ namespace YXOEE_FJ
                 {
                     try
                     {
-                        OpcGroup.AsyncRead(count, lserverhandles, out lErrors, TransactionID, out CancelID);
+                        if (OpcServer.ServerState == (int)OPCServerState.OPCRunning)
+                        {
+                            OpcGroup.AsyncRead(count, lserverhandles, out lErrors, TransactionID, out CancelID);
+                        }
                     }
                     catch (Exception ex)
                     {
+                        log.Error("6." + ex.Message);
+                        log.Error("6." + OpcServer.ServerState);
                     }
                 }
 
@@ -508,46 +502,28 @@ namespace YXOEE_FJ
             if (Init())
             {
                 ReadData();
+                log.Info("重新连接成功!");
             }
             else
             {
                 MessageBoxX.Show("连接OPC服务错误！", "错误提示");
             }
         }
+
+        public void Reconn(object sender, EventArgs e)
+        {
+            if (OpcServer.ServerState != (int)OPCServerState.OPCRunning)
+            {
+
+                DisConnected();
+
+                if (Init())
+                {
+                    ReadData();
+                    log.Info("重新连接成功!");
+                }
+            }
+        }
     }
 
-    public class OPCVarList
-    {
-        /// <summary>
-        /// 变量ID
-        /// </summary>
-        [DisplayName("变量ID")]
-        [IgnoreColumn]
-        public string OPCItemID { get; set; }
-
-        /// <summary>
-        /// 变量名称
-        /// </summary>
-        [DisplayName("变量名称")]
-        [ColumnWidth("350")]
-        public string OPCItemName { get; set; }
-        /// <summary>
-        /// 值
-        /// </summary>
-        [DisplayName("变量值")]
-        [ColumnWidth("200")]
-        public string OPCValue { get; set; }
-        /// <summary>
-        /// 通信质量
-        /// </summary>
-        [DisplayName("通信质量")]
-        [ColumnWidth("60")]
-        public string Quanlity { get; set; }
-        /// <summary>
-        /// 更新时间
-        /// </summary>
-        [DisplayName("更新时间")]
-        [ColumnWidth("*")]
-        public string UpdateTime { get; set; }
-    }
 }

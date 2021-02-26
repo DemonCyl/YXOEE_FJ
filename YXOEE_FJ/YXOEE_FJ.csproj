@@ -79,6 +79,7 @@
     </Compile>
     <Compile Include="Common\SQLHelper.cs" />
     <Compile Include="DAL\MainDAL.cs" />
+    <Compile Include="Entity\InterFaceDataFJ.cs" />
     <Compile Include="Entity\OPCServerData.cs" />
     <Compile Include="Entity\ConfigData.cs" />
     <Compile Include="MainWindow.xaml.cs">

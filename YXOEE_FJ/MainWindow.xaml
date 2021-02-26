@@ -25,33 +25,33 @@
                     pu:ButtonHelper.HoverBrush="#FF8900" pu:ButtonHelper.CornerRadius="7" Canvas.Left="320" Canvas.Top="52" Click="conn_Click" />
                 <Button  Height="30" Width="45" Content="断开" pu:ButtonHelper.ClickStyle="Sink" FontFamily="Microsoft Yahei" Background="White"  Foreground="Black" Visibility="Hidden" Name="disBtn"
                     pu:ButtonHelper.HoverBrush="#FF8900" pu:ButtonHelper.CornerRadius="7" Canvas.Left="320" Canvas.Top="52" Click="disconn_Click" />-->
-                <Button  Height="30" Width="80" Content="重新连接" pu:ButtonHelper.ClickStyle="Sink" FontFamily="Microsoft Yahei" Background="White"  Foreground="Black" Name="ReConn" FontSize="17"
+                <Button  Height="30" Width="80" Content="重新连接" pu:ButtonHelper.ClickStyle="Sink" FontFamily="Microsoft Yahei" Background="White"  Foreground="Black" Name="ReConn" FontSize="17" Visibility="Hidden"
                     pu:ButtonHelper.HoverBrush="#FF8900" pu:ButtonHelper.CornerRadius="7" Canvas.Left="158" Canvas.Top="14" Click="ReConn_Click" />
                 <Label Canvas.Top="14" Content="服务器状态:" FontSize="17" FontFamily="Microsoft Yahei" Foreground="Black" Canvas.Left="11" Width="101" HorizontalContentAlignment="Right"/>
                 <Image x:Name="OPCImage" Width="15" Height="13" Canvas.Left="120" Canvas.Top="23" />
 
-                <TextBox x:Name="TM" HorizontalAlignment="Center" Grid.Row="3" Foreground="Black" FontFamily="Microsoft Yahei" FontSize="17" Background="LightGray"
-                           TextWrapping="Wrap" Text="" VerticalAlignment="Center"  Height="32" Width="448" Canvas.Left="382" Canvas.Top="14"/>
+                <TextBox x:Name="TM" HorizontalAlignment="Center" Grid.Row="3" Foreground="Black" FontFamily="Microsoft Yahei" FontSize="17" Background="LightGray" HorizontalContentAlignment="Right"
+                           TextWrapping="Wrap" Text="" VerticalAlignment="Center"  Height="32" Width="323" Canvas.Left="507" Canvas.Top="14"/>
 
-                <DataGrid  Width="820" Height="277" x:Name="DataList" GridLinesVisibility="None"  HeadersVisibility="Column"
-                    pu:DataGridHelper.HeaderMinHeight="20" IsReadOnly="True" BorderThickness="2"  FontSize="15"
+                <DataGrid  Width="820" Height="409" x:Name="DataList" GridLinesVisibility="All"  HeadersVisibility="Column"
+                    pu:DataGridHelper.HeaderMinHeight="20" IsReadOnly="True" BorderThickness="1"  FontSize="16"
                     pu:DataGridHelper.RowMinHeight="20"  FontFamily="Microsoft Yahei" Foreground="Black"
-                    pu:DataGridHelper.ColumnHorizontalContentAlignment="Center" RowBackground="Transparent"
-                     CanUserAddRows="False" Canvas.Left="10" Canvas.Top="123" >
-                    <DataGrid.ColumnHeaderStyle>
+                    pu:DataGridHelper.ColumnHorizontalContentAlignment="Center" RowBackground="LightGoldenrodYellow" AlternationCount="2" AlternatingRowBackground="White"
+                     CanUserAddRows="False" Canvas.Left="10" Canvas.Top="51" >
+                    <!--<DataGrid.ColumnHeaderStyle>
                         <Style TargetType="{x:Type DataGridColumnHeader}">
                             <Setter Property="HorizontalContentAlignment" Value="Center"/>
                             <Setter Property="VerticalAlignment" Value="Center" />
                             <Setter Property="Background" Value="Transparent" />
                             <Setter Property="Height" Value="30"/>
-                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="BorderThickness" Value="1"/>
                             <Setter Property="BorderBrush">
                                 <Setter.Value>
-                                    <SolidColorBrush Color="White" Opacity="0.8"/>
+                                    <SolidColorBrush Color="Black" Opacity="0.8"/>
                                 </Setter.Value>
                             </Setter>
                         </Style>
-                    </DataGrid.ColumnHeaderStyle>
+                    </DataGrid.ColumnHeaderStyle>-->
                 </DataGrid>
             </Canvas>
         </Viewbox>
