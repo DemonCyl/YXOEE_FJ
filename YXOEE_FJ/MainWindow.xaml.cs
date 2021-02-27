@@ -23,6 +23,8 @@ using YXOEE_FJ.Entity;
 using Panuon.UI.Silver;
 using System.ComponentModel;
 using Panuon.UI.Silver.Core;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace YXOEE_FJ
 {
@@ -31,6 +33,7 @@ namespace YXOEE_FJ
     /// </summary>
     public partial class MainWindow : Window
     {
+        private NotifyIcon notifyIcon = null;
         object syncLock = new object();
         private OPCServer OpcServer;
         private OPCGroup OpcGroup;
@@ -97,10 +100,11 @@ namespace YXOEE_FJ
                 }
                 else
                 {
-                    if (MessageBoxX.Show("连接OPC服务错误！", "错误提示") == MessageBoxResult.OK)
-                    {
-                        this.Close();
-                    }
+                    //if (MessageBoxX.Show("连接OPC服务错误！", "错误提示") == MessageBoxResult.OK)
+                    //{
+                    //    this.Close();
+                    //}
+                    throw new Exception("连接OPC服务错误！");
                 }
 
                 #region 时间定时器
@@ -109,9 +113,13 @@ namespace YXOEE_FJ
                 ReconnTimer.Interval = new TimeSpan(0, 0, 0, 5);
                 ReconnTimer.Start();
                 #endregion
+
+                Notice.Show("飞锯数据采集软件启动成功.", "通知", 3, Panuon.UI.Silver.MessageBoxIcon.Success);
+                InitialTray();
             }
             catch (Exception ex)
             {
+                Notice.Show("飞锯数据采集软件启动失败.", "通知", 3, Panuon.UI.Silver.MessageBoxIcon.Error);
                 log.Error("1." + ex.Message);
             }
         }
@@ -137,11 +145,11 @@ namespace YXOEE_FJ
             string[] tmpIDs = new string[count + 1];
             string[] tmpNames = new string[count + 1];
             int[] tmpCHandles = new int[count + 1];
-            for (int i = 1; i<=count; i++)
+            for (int i = 1; i <= count; i++)
             {
                 tmpCHandles[i] = i;
-                tmpIDs[i] = varList[i-1].FTagID;
-                tmpNames[i] = varList[i-1].FDataName;
+                tmpIDs[i] = varList[i - 1].FTagID;
+                tmpNames[i] = varList[i - 1].FDataName;
             }
 
             DataList.ItemsSource = varList;
@@ -282,15 +290,32 @@ namespace YXOEE_FJ
         /// <param name="e"></param>
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            DisConnected();
+            //MessageBoxX.Show("确定退出吗?", "提示", System.Windows.Application.Current.MainWindow, MessageBoxButton.YesNo);
 
-            if (timer != null && timer.IsEnabled)
-                timer.Stop();
+            if (System.Windows.MessageBox.Show("确定退出吗?",
+                                               "提示",
+                                                MessageBoxButton.YesNoCancel,
+                                                MessageBoxImage.Question,
+                                                MessageBoxResult.Yes) == MessageBoxResult.Yes)
+            {
+                DisConnected();
 
-            if (ShowTimer != null && ShowTimer.IsEnabled)
-                ShowTimer.Stop();
+                if (timer != null && timer.IsEnabled)
+                    timer.Stop();
+
+                if (ShowTimer != null && ShowTimer.IsEnabled)
+                    ShowTimer.Stop();
+
+                if (ReconnTimer != null && ReconnTimer.IsEnabled)
+                    ReconnTimer.Stop();
+
+                System.Environment.Exit(0);
+            }
+            else
+            {
+                e.Cancel = true;
+            }
         }
-
         /// <summary>
         /// 创建组
         /// </summary>
@@ -387,7 +412,7 @@ namespace YXOEE_FJ
                 mTime = mTime.AddMinutes(5);
                 if (now.Day == mTime.Day && now.Hour == mTime.Hour && now.Minute == mTime.Minute)
                 {
-
+                    log.Info("addd");
                     stSave = true;
                 }
             }
@@ -400,7 +425,7 @@ namespace YXOEE_FJ
                 eTime = eTime.AddMinutes(55);
                 if (now.Day == eTime.Day && now.Hour == eTime.Hour && now.Minute == eTime.Minute)
                 {
-
+                    log.Info("ACCCC");
                     endSave = true;
                 }
             }
@@ -524,6 +549,67 @@ namespace YXOEE_FJ
                 }
             }
         }
+
+        #region 托盘
+        private void InitialTray()
+        {
+            //隐藏主窗体
+            this.Visibility = Visibility.Hidden;
+            //设置托盘的各个属性
+            notifyIcon = new NotifyIcon();
+            notifyIcon.Text = "飞锯采集";
+            notifyIcon.Visible = true;//托盘按钮是否可见
+            notifyIcon.Icon = System.Drawing.Icon.ExtractAssociatedIcon(System.Windows.Forms.Application.ExecutablePath);
+            //鼠标点击事件
+            notifyIcon.MouseClick += new System.Windows.Forms.MouseEventHandler(notifyIcon_MouseClick);
+            //窗体状态改变时触发
+            this.StateChanged += MainWindow_StateChanged;
+        }
+
+
+        // 托盘图标鼠标单击事件
+        private void notifyIcon_MouseClick(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            //鼠标左键，实现窗体最小化隐藏或显示窗体
+            if (e.Button == MouseButtons.Left)
+            {
+                if (this.Visibility == Visibility.Visible)
+                {
+                    this.Visibility = Visibility.Hidden;
+                }
+                else
+                {
+                    this.Visibility = Visibility.Visible;
+                    this.Activate();
+                }
+            }
+            if (e.Button == MouseButtons.Right)
+            {
+                //exit_Click(sender, e);//触发单击退出事件
+                //Close();
+                System.Environment.Exit(0);
+            }
+        }
+
+        // 窗体状态改变时候触发
+        private void SysTray_StateChanged(object sender, EventArgs e)
+        {
+            if (this.WindowState == WindowState.Minimized)
+            {
+                this.Visibility = Visibility.Hidden;
+            }
+        }
+
+        // 窗口状态改变，最小化托盘
+        private void MainWindow_StateChanged(object sender, EventArgs e)
+        {
+            if (this.WindowState == WindowState.Minimized)
+            {
+                this.Visibility = Visibility.Hidden;
+            }
+        } 
+        #endregion
+
     }
 
 }
