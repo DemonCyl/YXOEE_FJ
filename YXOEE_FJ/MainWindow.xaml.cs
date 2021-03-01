@@ -96,7 +96,7 @@ namespace YXOEE_FJ
 
                 if (Init())
                 {
-                    ReadData();
+                    //ReadData();
                 }
                 else
                 {
@@ -138,8 +138,8 @@ namespace YXOEE_FJ
                 return false;
 
             OPCImage.Source = ITrue;
-            OpcGroup.AsyncReadComplete += AsyncReadData;
-            //OpcGroup.DataChange += AsyncReadData;
+            //OpcGroup.AsyncReadComplete += AsyncReadData;
+            OpcGroup.DataChange += AsyncReadData;
 
             // add items
             string[] tmpIDs = new string[count + 1];
@@ -207,8 +207,8 @@ namespace YXOEE_FJ
                 {
                     try
                     {
-                        OpcGroup.AsyncReadComplete -= AsyncReadData;
-                        //OpcGroup.DataChange -= AsyncReadData;
+                        //OpcGroup.AsyncReadComplete -= AsyncReadData;
+                        OpcGroup.DataChange -= AsyncReadData;
                         //删组 
                         if (OpcGroup != null)
                             OpcServer.OPCGroups.Remove(OpcGroup.Name);
@@ -359,7 +359,7 @@ namespace YXOEE_FJ
         /// <param name="Qualities"></param>
         /// <param name="TimeStamps"></param>
         /// <param name="Errors"></param>
-        private void AsyncReadData(int TransactionID, int NumItems, ref Array ClientHandles, ref Array ItemValues, ref Array Qualities, ref Array TimeStamps, ref Array Errors) //, ref Array Errors
+        private void AsyncReadData(int TransactionID, int NumItems, ref Array ClientHandles, ref Array ItemValues, ref Array Qualities, ref Array TimeStamps) //, ref Array Errors
         {
             // 数据解析
             for (int i = 0; i < NumItems; i++)
@@ -391,44 +391,44 @@ namespace YXOEE_FJ
             DataList.Items.Refresh();
 
             // 时间点存储数据
-            if (!firstSave)
-            {
+            //if (!firstSave)
+            //{
 
-                firstSave = true;
-            }
+            //    firstSave = true;
+            //}
 
-            DateTime now = DateTime.Now;
-            if (now.Date > trigger.Date)
-            {
-                stSave = false;
-                endSave = false;
-                trigger.AddDays(1);
-            }
+            //DateTime now = DateTime.Now;
+            //if (now.Date > trigger.Date)
+            //{
+            //    stSave = false;
+            //    endSave = false;
+            //    trigger.AddDays(1);
+            //}
 
-            if (!stSave)
-            {
-                // 早上 00:05:00
-                var mTime = trigger;
-                mTime = mTime.AddMinutes(5);
-                if (now.Day == mTime.Day && now.Hour == mTime.Hour && now.Minute == mTime.Minute)
-                {
-                    log.Info("addd");
-                    stSave = true;
-                }
-            }
+            //if (!stSave)
+            //{
+            //    // 早上 00:05:00
+            //    var mTime = trigger;
+            //    mTime = mTime.AddMinutes(5);
+            //    if (now.Day == mTime.Day && now.Hour == mTime.Hour && now.Minute == mTime.Minute)
+            //    {
+            //        log.Info("addd");
+            //        stSave = true;
+            //    }
+            //}
 
-            if (!endSave)
-            {
-                // 晚上 23:55:00
-                var eTime = trigger;
-                eTime = eTime.AddHours(23);
-                eTime = eTime.AddMinutes(55);
-                if (now.Day == eTime.Day && now.Hour == eTime.Hour && now.Minute == eTime.Minute)
-                {
-                    log.Info("ACCCC");
-                    endSave = true;
-                }
-            }
+            //if (!endSave)
+            //{
+            //    // 晚上 23:55:00
+            //    var eTime = trigger;
+            //    eTime = eTime.AddHours(23);
+            //    eTime = eTime.AddMinutes(55);
+            //    if (now.Day == eTime.Day && now.Hour == eTime.Hour && now.Minute == eTime.Minute)
+            //    {
+            //        log.Info("ACCCC");
+            //        endSave = true;
+            //    }
+            //}
 
         }
 
@@ -544,7 +544,7 @@ namespace YXOEE_FJ
 
                 if (Init())
                 {
-                    ReadData();
+                   // ReadData();
                     log.Info("重新连接成功!");
                 }
             }
@@ -586,8 +586,8 @@ namespace YXOEE_FJ
             if (e.Button == MouseButtons.Right)
             {
                 //exit_Click(sender, e);//触发单击退出事件
-                //Close();
-                System.Environment.Exit(0);
+                Close();
+                
             }
         }
 
