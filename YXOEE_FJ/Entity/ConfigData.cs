@@ -18,8 +18,5 @@ namespace YXOEE_FJ.Entity
         public string Pwd { get; set; }
         #endregion
 
-        #region OPC服务器IP
-        public string OpcIp { get; set; }
-        #endregion
     }
 }

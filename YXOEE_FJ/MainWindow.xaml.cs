@@ -375,7 +375,7 @@ namespace YXOEE_FJ
                         {
                             this.varList[j].Fvalue = value.ToString();
                             this.varList[j].FQuanlity = Qualities.GetValue(i + 1).ToString();
-                            this.varList[j].UpdateTime = TimeStamps.GetValue(i + 1).ToString();
+                            this.varList[j].UpdateTime = DateTime.Now.ToString(); //TimeStamps.GetValue(i + 1).ToString();
 
                             dal.UpdateData(varList[j]);
                         }
@@ -526,7 +526,7 @@ namespace YXOEE_FJ
 
             if (Init())
             {
-                ReadData();
+                //ReadData();
                 log.Info("重新连接成功!");
             }
             else
