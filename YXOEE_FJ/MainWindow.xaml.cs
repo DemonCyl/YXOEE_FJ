@@ -25,6 +25,9 @@ using System.ComponentModel;
 using Panuon.UI.Silver.Core;
 using System.Drawing;
 using System.Windows.Forms;
+using OpcUaHelper;
+using Opc.Ua;
+using Opc.Ua.Client;
 
 namespace YXOEE_FJ
 {
@@ -35,6 +38,8 @@ namespace YXOEE_FJ
     {
         private NotifyIcon notifyIcon = null;
         object syncLock = new object();
+        private OpcUaClient m_OpcUaClient = new OpcUaClient();
+        private string[] MonitorNodeTags = null;
         private OPCServer OpcServer;
         private OPCGroup OpcGroup;
         private OPCGroups OpcGroups;
@@ -94,24 +99,17 @@ namespace YXOEE_FJ
 
                 OpcServer = new OPCServer();
 
-                if (Init())
-                {
-                    //ReadData();
-                }
-                else
-                {
-                    //if (MessageBoxX.Show("连接OPC服务错误！", "错误提示") == MessageBoxResult.OK)
-                    //{
-                    //    this.Close();
-                    //}
-                    throw new Exception("连接OPC服务错误！");
-                }
+                //if (!Init())
+                //{
+                //    throw new Exception("连接OPC服务错误！");
+                //}
+                UaInit();
 
                 #region 时间定时器
-                ReconnTimer = new System.Windows.Threading.DispatcherTimer();
-                ReconnTimer.Tick += new EventHandler(Reconn);
-                ReconnTimer.Interval = new TimeSpan(0, 0, 0, 5);
-                ReconnTimer.Start();
+                //ReconnTimer = new System.Windows.Threading.DispatcherTimer();
+                //ReconnTimer.Tick += new EventHandler(Reconn);
+                //ReconnTimer.Interval = new TimeSpan(0, 0, 0, 5);
+                //ReconnTimer.Start();
                 #endregion
 
                 Notice.Show("飞锯数据采集软件启动成功.", "通知", 3, Panuon.UI.Silver.MessageBoxIcon.Success);
@@ -124,8 +122,95 @@ namespace YXOEE_FJ
             }
         }
 
+        private async void UaInit()
+        {
+            #region OPC UA
+
+            m_OpcUaClient.UserIdentity = new UserIdentity(new AnonymousIdentityToken());
+            try
+            {
+                await m_OpcUaClient.ConnectServer(serverData.OpcServerName);
+            }
+            catch (Exception ex)
+            {
+                //ClientUtils.HandleException("Connected Failed", ex);
+                log.Error(ex.Message);
+            }
+
+            m_OpcUaClient.ConnectComplete += M_OpcUaClient_ConnectComplete;
+            m_OpcUaClient.KeepAliveComplete += MyKeepAliveComplete;
+            m_OpcUaClient.ReconnectComplete += MyReconnectComplete;
+
+            MonitorNodeTags = new string[count + 1];
+            for (int i = 1; i <= count; i++)
+            {
+                MonitorNodeTags[i] = varList[i - 1].FTagID;
+            }
+            m_OpcUaClient.AddSubscription("Sub", MonitorNodeTags, SubCallback);
+
+            #endregion
+        }
+
+        private void MyReconnectComplete(object sender, EventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                OPCImage.Source = IFalse;
+            });
+            //throw new NotImplementedException();
+        }
+
+        private void MyKeepAliveComplete(object sender, EventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                OPCImage.Source = ITrue;
+            });
+            //throw new NotImplementedException();
+        }
+
+        private void M_OpcUaClient_ConnectComplete(object sender, EventArgs e)
+        {
+            //throw new NotImplementedException();
+            Dispatcher.Invoke(() =>
+            {
+                OPCImage.Source = ITrue;
+            });
+        }
+
+        private void SubCallback(string key, MonitoredItem monitoredItem, MonitoredItemNotificationEventArgs args)
+        {
+
+            if (key == "Sub")
+            {
+                // 需要区分出来每个不同的节点信息
+                MonitoredItemNotification notification = args.NotificationValue as MonitoredItemNotification;
+
+
+                for (int j = 0; j < this.varList.Count; j++)
+                {
+                    if (monitoredItem.StartNodeId.ToString() == MonitorNodeTags[j + 1])
+                    {
+                        this.varList[j].Fvalue = notification.Value.WrappedValue.Value.ToString();
+                        this.varList[j].FQuanlity = notification.Value.StatusCode.ToString();
+                        this.varList[j].UpdateTime = DateTime.Now.ToString(); //TimeStamps.GetValue(i + 1).ToString();
+
+                        dal.UpdateData(varList[j]);
+                    }
+                }
+
+            }
+
+            Dispatcher.Invoke(() =>
+            {
+                DataList.ItemsSource = varList;
+                DataList.Items.Refresh();
+
+            });
+        }
+
         /// <summary>
-        /// OPC 连接初始化
+        /// OPC DA 连接初始化
         /// </summary>
         /// <returns></returns>
         private bool Init()
@@ -238,6 +323,9 @@ namespace YXOEE_FJ
             OpcGroup = null;
             IsConnected = false;
             OPCImage.Source = IFalse;
+
+            m_OpcUaClient.RemoveAllSubscription();
+            m_OpcUaClient.Disconnect();
         }
 
         /// <summary>
@@ -279,6 +367,7 @@ namespace YXOEE_FJ
             {
                 OPCState = false;
                 log.Error("3." + ex.Message);
+
                 return false;
             }
         }
@@ -389,46 +478,6 @@ namespace YXOEE_FJ
 
             DataList.ItemsSource = varList;
             DataList.Items.Refresh();
-
-            // 时间点存储数据
-            //if (!firstSave)
-            //{
-
-            //    firstSave = true;
-            //}
-
-            //DateTime now = DateTime.Now;
-            //if (now.Date > trigger.Date)
-            //{
-            //    stSave = false;
-            //    endSave = false;
-            //    trigger.AddDays(1);
-            //}
-
-            //if (!stSave)
-            //{
-            //    // 早上 00:05:00
-            //    var mTime = trigger;
-            //    mTime = mTime.AddMinutes(5);
-            //    if (now.Day == mTime.Day && now.Hour == mTime.Hour && now.Minute == mTime.Minute)
-            //    {
-            //        log.Info("addd");
-            //        stSave = true;
-            //    }
-            //}
-
-            //if (!endSave)
-            //{
-            //    // 晚上 23:55:00
-            //    var eTime = trigger;
-            //    eTime = eTime.AddHours(23);
-            //    eTime = eTime.AddMinutes(55);
-            //    if (now.Day == eTime.Day && now.Hour == eTime.Hour && now.Minute == eTime.Minute)
-            //    {
-            //        log.Info("ACCCC");
-            //        endSave = true;
-            //    }
-            //}
 
         }
 
@@ -544,7 +593,7 @@ namespace YXOEE_FJ
 
                 if (Init())
                 {
-                   // ReadData();
+                    // ReadData();
                     log.Info("重新连接成功!");
                 }
             }
@@ -587,7 +636,7 @@ namespace YXOEE_FJ
             {
                 //exit_Click(sender, e);//触发单击退出事件
                 Close();
-                
+
             }
         }
 
@@ -607,7 +656,7 @@ namespace YXOEE_FJ
             {
                 this.Visibility = Visibility.Hidden;
             }
-        } 
+        }
         #endregion
 
     }
