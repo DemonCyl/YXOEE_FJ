@@ -125,8 +125,7 @@ namespace YXOEE_FJ
         private async void UaInit()
         {
             #region OPC UA
-
-            m_OpcUaClient.UserIdentity = new UserIdentity(new AnonymousIdentityToken());
+            m_OpcUaClient.UserIdentity = new UserIdentity();
             try
             {
                 await m_OpcUaClient.ConnectServer(serverData.OpcServerName);
