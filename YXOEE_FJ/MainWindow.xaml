@@ -34,8 +34,8 @@
                            TextWrapping="Wrap" Text="" VerticalAlignment="Center"  Height="32" Width="323" Canvas.Left="507" Canvas.Top="14"/>
 
                 <DataGrid  Width="820" Height="409" x:Name="DataList" GridLinesVisibility="All"  HeadersVisibility="Column"
-                    pu:DataGridHelper.HeaderMinHeight="20" IsReadOnly="True" BorderThickness="1"  FontSize="16"
-                    pu:DataGridHelper.RowMinHeight="20"  FontFamily="Microsoft Yahei" Foreground="Black"
+                    pu:DataGridHelper.HeaderMinHeight="18" IsReadOnly="True" BorderThickness="1"  FontSize="10"
+                    pu:DataGridHelper.RowMinHeight="14"  FontFamily="Microsoft Yahei" Foreground="Black"
                     pu:DataGridHelper.ColumnHorizontalContentAlignment="Center" RowBackground="LightGoldenrodYellow" AlternationCount="2" AlternatingRowBackground="White"
                      CanUserAddRows="False" Canvas.Left="10" Canvas.Top="51" >
                     <!--<DataGrid.ColumnHeaderStyle>

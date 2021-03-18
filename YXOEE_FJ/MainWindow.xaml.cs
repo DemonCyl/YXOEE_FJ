@@ -28,6 +28,7 @@ using System.Windows.Forms;
 using OpcUaHelper;
 using Opc.Ua;
 using Opc.Ua.Client;
+using OpcUaHelper.Forms;
 
 namespace YXOEE_FJ
 {
@@ -67,6 +68,7 @@ namespace YXOEE_FJ
         private OPCServerData serverData = new OPCServerData();
         private static BitmapImage IFalse = new BitmapImage(new Uri("/Static/01.png", UriKind.Relative));
         private static BitmapImage ITrue = new BitmapImage(new Uri("/Static/02.png", UriKind.Relative));
+
 
         public MainWindow()
         {
@@ -126,15 +128,20 @@ namespace YXOEE_FJ
         {
             #region OPC UA
             m_OpcUaClient.UserIdentity = new UserIdentity();
+            m_OpcUaClient.SetLogPathName("C:\\OEELogs\\opc.ua.client.txt", true);
+            // 获取其他服务器注册的地址，注意，需要该IP的安全策略配置正确
+            // string endpointUrl = new DiscoverServerDlg().ShowDialog( m_OpcUaClient.AppConfig, null );
+
             try
             {
                 await m_OpcUaClient.ConnectServer(serverData.OpcServerName);
             }
             catch (Exception ex)
             {
-                //ClientUtils.HandleException("Connected Failed", ex);
+                ClientUtils.HandleException("Connected Failed", ex);
                 log.Error(ex.Message);
             }
+
 
             m_OpcUaClient.ConnectComplete += M_OpcUaClient_ConnectComplete;
             m_OpcUaClient.KeepAliveComplete += MyKeepAliveComplete;
@@ -145,7 +152,15 @@ namespace YXOEE_FJ
             {
                 MonitorNodeTags[i] = varList[i - 1].FTagID;
             }
-            m_OpcUaClient.AddSubscription("Sub", MonitorNodeTags, SubCallback);
+            try
+            {
+                m_OpcUaClient.AddSubscription("Sub", MonitorNodeTags, SubCallback);
+            }
+            catch (Exception ex)
+            {
+                ClientUtils.HandleException("Sub Error", ex);
+                log.Error(ex.Message);
+            }
 
             #endregion
         }
